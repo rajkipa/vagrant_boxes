@@ -1,0 +1,40 @@
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  config.vm.hostname = "ipa-server.example.com"
+  config.vm.network "private_network", ip: "192.168.10.10"
+  config.vm.network "forwarded_port", guest: 22, host: 2210, auto_correct: true
+  config.vm.define "ipa-server" do |c1|
+  end
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "ipa-server"
+    vb.memory = 768
+    vb.cpus = 2
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "off" ]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "off" ]
+  end
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder ".", "/home/vagrant/sync"
+  config.vm.synced_folder "../data", "/data"
+  config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "/tmp/id_rsa.pub"
+  config.vm.provision "shell", inline: " echo >> /home/vagrant/.ssh/authorized_keys; cat /tmp/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys", privileged: false
+  
+  config.vm.provision "shell", inline: <<-SHELL
+    yum -y update
+    yum -y install ipa-server ipa-server-dns bind bind-dyndb-ldap
+    chmod 777 /data
+    systemctl disable firewalld
+    systemctl stop firewalld
+    systemctl disable NetworkManager
+    systemctl stop NetworkManager
+    yum remove -y NetworkManager
+    sed -i 's/^SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
+    sed -i '/ipa-server/ s/^127.0.0.1/192.168.10.10/' /etc/hosts
+    ipa-server-install -n example.com -r EXAMPLE.COM -p dmpasswd123 -a admin123 --hostname ipa-server.example.com --ip-address=192.168.10.10 --idstart=1000 --setup-dns --no-forwarders -U
+    if ! grep "127.0.0.1" /etc/hosts; then
+        echo "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4" >> /etc/hosts
+    fi
+    systemctl reboot
+  SHELL
+
+end
