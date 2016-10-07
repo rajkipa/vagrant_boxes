@@ -1,0 +1,7 @@
+name             'netconfig'
+maintainer       'rajkipa'
+maintainer_email 'rajkipa@example.com'
+license          'All rights reserved'
+description      'Installs/Configures netconfig'
+long_description 'configuring resolv.conf'
+version          '0.1.0'
