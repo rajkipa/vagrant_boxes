@@ -1,0 +1,42 @@
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  config.vm.hostname = "katello-server.example.com"
+  config.vm.network "private_network", ip: "192.168.10.13"
+  config.vm.network "forwarded_port", guest: 22, host: 2213, auto_correct: true
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "katello-server"
+    vb.memory = 5120
+    vb.cpus = 8
+  end
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder ".", "/home/vagrant/sync"
+
+  config.vm.provision "shell", inline: <<-SHELL
+    yum -y localinstall http://fedorapeople.org/groups/katello/releases/yum/3.2/katello/el7/x86_64/katello-repos-latest.rpm
+    yum -y localinstall http://yum.theforeman.org/releases/1.13/el7/x86_64/foreman-release.rpm
+    yum -y localinstall https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm # will install with Puppet 4
+    #yum -y localinstall http://yum.puppetlabs.com/puppetlabs-release-el-7.noarch.rpm # use this instead if you prefer Puppet 3
+    yum -y localinstall http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    yum -y install foreman-release-scl
+    yum -y update
+    yum -y install katello
+    foreman-installer --scenario katello
+    foreman-installer --scenario katello
+    SHELL
+
+
+#  config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "/tmp/id_rsa.pub"
+#  config.vm.provision "shell", inline: " echo >> /home/vagrant/.ssh/authorized_keys; cat /tmp/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys", privileged: false
+
+#  config.vm.provision "chef_client" do |chef|
+#    chef.chef_server_url = "https://192.168.10.11/organizations/test/"
+#    chef.validation_client_name = "test-validator"
+#    chef.validation_key_path = "../chef-server/test-validator.pem"
+#    chef.provisioning_path = "/etc/chef"
+#    chef.delete_node = true
+#    chef.delete_client = true
+#    chef.add_recipe "netconfig::resolv_conf"
+#  end
+
+end
