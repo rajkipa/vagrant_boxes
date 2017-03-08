@@ -1,5 +1,6 @@
 */.vagrant/*
 archive
 .DS_Store
-client2/
+client*/
 git-server/
+*.iso
