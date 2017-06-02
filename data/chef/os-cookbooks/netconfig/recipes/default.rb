@@ -6,5 +6,5 @@
 #
 # All rights reserved - Do Not Redistribute
 #
-include_recipe "netconfig::NetworkManager_conf.rb"
-include_recipe "netconfig::resolv_conf.rb"
+include_recipe "netconfig::NetworkManager_conf"
+include_recipe "netconfig::resolv_conf"

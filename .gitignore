@@ -4,3 +4,4 @@ archive
 client*/
 git-server/
 *.iso
+*chef*
